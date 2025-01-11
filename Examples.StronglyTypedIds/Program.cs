@@ -1,4 +1,5 @@
-using Bogus;
+using Examples.StronglyTypedIds;
+using Examples.StronglyTypedIds.Entities;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
@@ -28,7 +29,6 @@ app.MapOpenApi();
 app.UseHttpsRedirection();
 
 
-
 app.MapGet("/owners", async (AppDbContext dbContext) =>
     {
         return await dbContext.Owners.ToListAsync();
@@ -45,7 +45,7 @@ app.MapPost("/owners", async (AppDbContext dbContext) =>
     .WithName("Create random owner");
 
 
-app.MapPost("/owners/{ownerId:guid}/pet", async (AppDbContext dbContext, Guid ownerId) =>
+app.MapPost("/owners/{ownerId}/pet", async (AppDbContext dbContext, OwnerId ownerId) =>
     {
         var pet = Fakers.Pet(ownerId).Generate();
         await dbContext.Pets.AddAsync(pet);
@@ -55,44 +55,10 @@ app.MapPost("/owners/{ownerId:guid}/pet", async (AppDbContext dbContext, Guid ow
     .WithName("Create random pet for owner");
 
 
-app.MapGet("/owners/{ownerId:guid}/pets", async (AppDbContext dbContext, Guid ownerId) =>
+app.MapGet("/owners/{ownerId}/pets", async (AppDbContext dbContext, OwnerId ownerId) =>
     {
         return await dbContext.Pets.Where(p => p.OwnerId == ownerId).ToListAsync();
     })
     .WithName("Get Pets by owner id");
 
 app.Run();
-
-public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
-{
-    public DbSet<Owner> Owners { get; set; }
-    public DbSet<Pet> Pets { get; set; }
-}
-
-public class Owner
-{
-    public Guid Id { get; set; }
-    public string Name { get; set; } = null!;
-    public List<Pet> Pets { get; set; } = [];
-}
-
-public class Pet
-{
-    public Guid Id { get; set; }
-    public string Name { get; set; } = null!;
-    public Guid OwnerId { get; set; }
-    public Owner Owner { get; set; } = null!;
-}
-
-public class Fakers
-{
-    public static Faker<Owner> Owner = new Faker<Owner>()
-        .RuleFor(o => o.Id, f => f.Random.Guid())
-        .RuleFor(o => o.Name, f => f.Name.FullName());
-    
-    
-    public static Faker<Pet> Pet (Guid ownerId) => new Faker<Pet>()
-        .RuleFor(p => p.Id, f => f.Random.Guid())
-        .RuleFor(p => p.Name, f => f.Name.FullName())
-        .RuleFor(p => p.OwnerId, f => ownerId);
-}
