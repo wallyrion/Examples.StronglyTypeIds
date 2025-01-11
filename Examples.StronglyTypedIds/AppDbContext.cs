@@ -10,13 +10,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Owner>();
-        modelBuilder.Entity<Owner>().Property(o => o.Id).HasConversion(new OwnerId.EfCoreValueConverter());
-
-        modelBuilder.Entity<Pet>(builder =>
+        modelBuilder.Entity<Owner>(b =>
         {
-            builder.Property(c => c.OwnerId).HasConversion(new OwnerId.EfCoreValueConverter());
-            builder.Property(c => c.Id).HasConversion(new PetId.EfCoreValueConverter());
+            b.Property(o => o.Id).HasConversion(new OwnerId.EfCoreValueConverter());
+        });
+
+        modelBuilder.Entity<Pet>(b =>
+        {
+            b.Property(c => c.OwnerId).HasConversion(new OwnerId.EfCoreValueConverter());
+            b.Property(c => c.Id).HasConversion(new PetId.EfCoreValueConverter());
         });
     }
 }
